@@ -1,0 +1,8 @@
+# Sanal ortamı yoksay
+.venv/
+
+# Python gereksiz dosyaları
+__pycache__/
+
+# Büyük veri setlerini yoksay
+*.csv
