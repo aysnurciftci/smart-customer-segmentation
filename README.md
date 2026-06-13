@@ -6,7 +6,7 @@ Proje kapsamında ham işlem verileri işlenerek 7 boyutlu özellik matrisine d�
 
 ---
 
-## 📂 Proje Dizin Yapısı
+##  Proje Dizin Yapısı
 
 Proje dizini, kod kalitesini ve modülerliği korumak amacıyla yalın ve standartlara uygun bir yapıda kurgulanmıştır:
 
@@ -22,7 +22,7 @@ smart-customer-segmentation/
 
 ---
 
-## 🛠️ Sistem Mimarisi ve Kullanılan Teknolojiler
+## Sistem Mimarisi ve Kullanılan Teknolojiler
 
 Proje mimarisi veri toplama, önişleme, özellik mühendisliği, modelleme, API sunumu ve görselleştirme katmanlarından oluşur:
 * **Veri İşleme ve Temizleme:** Python, Pandas, NumPy
@@ -32,7 +32,7 @@ Proje mimarisi veri toplama, önişleme, özellik mühendisliği, modelleme, API
 
 ---
 
-## ⚙️ Kurulum ve Çalıştırma Adımları
+##  Kurulum ve Çalıştırma Adımları
 
 Sistemin yerel ortamda kurulumu ve koşturulması için aşağıdaki adımları takip ediniz:
 
@@ -41,8 +41,10 @@ Bağımlılıkların izole bir ortamda kurulması için proje dizininde sanal or
 
 **Windows PowerShell/CMD:**
 ```bash
-python -m venv .venv
 .venv\Scripts\activate
+
+Eğer yetki hatası alırsanız, Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process 
+komutunu çalıştırıp ardından yukarıdaki aktifleştirme komutunu tekrar deneyebilirsiniz.
 ```
 
 **macOS / Linux:**
@@ -66,7 +68,7 @@ Sunucu başlatıldığında, yerel dizinde `online_retail.csv` dosyası varsa do
 
 ---
 
-## 🧠 Makine Öğrenmesi Hattı ve Metodoloji
+##  Makine Öğrenmesi Hattı ve Metodoloji
 
 Sistem veri temizleme adımından başlayarak tahmin çıktılarına kadar doğrusal bir boru hattı (pipeline) üzerinde çalışır:
 
@@ -109,7 +111,7 @@ Sınıf dağılımındaki dengesizliğe karşı modeller Random Forest algoritma
 
 ---
 
-## 🤖 Karar Destek ve Öneri Mantığı
+##  Karar Destek ve Öneri Mantığı
 
 Tahmin modellerinden üretilen olasılık skorları, kural tabanlı bir karar motoru ile iş aksiyonlarına dönüştürülür:
 1. **Pasif Müşteri Reaktivasyonu (Churn Riski > %75):** Müşteri kaybı olasılığı kritik seviyededir. Sistem, akran öneri algoritmasından gelen ürünlerle birlikte özel reaktivasyon indirim teklifleri önerir.
@@ -119,7 +121,7 @@ Tahmin modellerinden üretilen olasılık skorları, kural tabanlı bir karar mo
 
 ---
 
-## 💻 Donanım ve Yazılım Gereksinimleri
+##  Donanım ve Yazılım Gereksinimleri
 
 ### Yazılım Gereksinimleri
 * **İşletim Sistemi:** Windows 10/11, macOS, Linux (tümü desteklenmektedir).
@@ -133,7 +135,7 @@ Tahmin modellerinden üretilen olasılık skorları, kural tabanlı bir karar mo
 
 ---
 
-## 🗄️ Veritabanı ve Çevresel Yapılandırma (.env) Durumu
+## 🗄 Veritabanı ve Çevresel Yapılandırma (.env) Durumu
 
 * **Veritabanı:** Bu sistemde herhangi bir harici SQL veya NoSQL veritabanı motoru (PostgreSQL, MySQL, MongoDB vb.) **kullanılmamıştır.** Müşteri kayıtları, işlem hareketleri ve makine öğrenmesi özellikleri doğrudan Pandas DataFrame yapısı üzerinden **bellek içi (in-memory)** yönetilmektedir. Bu nedenle herhangi bir veritabanı kurulumu veya dump yükleme adımına ihtiyaç yoktur.
 * **Model Dosyası:** Makine öğrenmesi modelleri sunucu her başlatıldığında ham veri üzerinden dinamik olarak anlık eğitilmektedir. Devasa boyutlu kalıcı model dosyalarına ihtiyaç yoktur.
@@ -141,14 +143,14 @@ Tahmin modellerinden üretilen olasılık skorları, kural tabanlı bir karar mo
 
 ---
 
-## 🔑 Arayüz Erişim Bilgileri (Demo)
+##  Arayüz Erişim Bilgileri (Demo)
 
 Geliştirilen yönetici paneli ve analiz ekranları yerel ağda herkese açık olarak çalışacak şekilde tasarlanmıştır:
 * **Giriş Bilgileri (Username/Password):** Arayüzde herhangi bir kullanıcı giriş (Login) yetkilendirme katmanı bulunmamaktadır. Tarayıcıdan `http://127.0.0.1:5000` adresine girildiğinde doğrudan dashboard ekranına erişim sağlanır.
-
+DEMO VİDEOSU:https://drive.google.com/file/d/1by6ErPWJdJN_wf5P_uX33PilIX4RyBzk/view?usp=drive_link
 ---
 
-## 📊 Veri Seti Erişimi ve Örnek Veri (Dataset & Sample Data)
+##  Veri Seti Erişimi ve Örnek Veri (Dataset & Sample Data)
 
 ### 1. Orijinal Veri Seti
 Projede kullanılan orijinal veri setine Kaggle üzerinden erişebilirsiniz:
