@@ -147,7 +147,8 @@ Tahmin modellerinden üretilen olasılık skorları, kural tabanlı bir karar mo
 
 Geliştirilen yönetici paneli ve analiz ekranları yerel ağda herkese açık olarak çalışacak şekilde tasarlanmıştır:
 * **Giriş Bilgileri (Username/Password):** Arayüzde herhangi bir kullanıcı giriş (Login) yetkilendirme katmanı bulunmamaktadır. Tarayıcıdan `http://127.0.0.1:5000` adresine girildiğinde doğrudan dashboard ekranına erişim sağlanır.
-DEMO VİDEOSU:https://drive.google.com/file/d/1by6ErPWJdJN_wf5P_uX33PilIX4RyBzk/view?usp=drive_link
+
+* DEMO VİDEOSU:https://drive.google.com/file/d/1by6ErPWJdJN_wf5P_uX33PilIX4RyBzk/view?usp=drive_link
 ---
 
 ##  Veri Seti Erişimi ve Örnek Veri (Dataset & Sample Data)
