@@ -649,6 +649,7 @@
     }
 
     // Chart.js kullanarak segment grafiğini çiz
+    function renderSegmentChart(counts) {
         const ctx = document.getElementById('segmentChart').getContext('2d');
         
         // Çakışmaları engellemek adına eski grafik nesnesini destroy et
