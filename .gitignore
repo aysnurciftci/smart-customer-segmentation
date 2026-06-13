@@ -1,8 +1,31 @@
-# Sanal ortamı yoksay
+# Sanal Ortam (Virtual Environment)
 .venv/
+venv/
+ENV/
+env/
 
-# Python gereksiz dosyaları
+# Python Cache & Bytecode
 __pycache__/
+*.py[cod]
+*$py.class
 
-# Büyük veri setlerini yoksay
+# IDE / Editör Ayarları
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+
+# Büyük Veri Setleri
 *.csv
+!online_retail_sample.csv
+*.xlsx
+*.zip
+*.tar.gz
+
+# Sunum ve Görsel Taslak Dosyaları (GitHub'a eklenmemeli)
+slide_*_layout.png
+slide_*.png
