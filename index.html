@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akıllı Müşteri Segmentasyonu & Tahmin Sistemi</title>
+    <!-- Bootstrap CSS grid system -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Font - Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js from Cloudflare cdnjs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #131b2e;
+            --border-color: #222d4a;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --accent-red: #ef4444;
+            --accent-red-hover: #f87171;
+            --accent-green: #10b981;
+            --accent-green-bg: #064e3b;
+            --accent-green-border: #047857;
+            --accent-green-text: #34d399;
+            --alert-red-bg: #7f1d1d;
+            --alert-red-border: #b91c1c;
+            --alert-red-text: #fca5a5;
+            --alert-red-bg: #7f1d1d;
+            --alert-red-border: #b91c1c;
+            --alert-red-text: #fca5a5;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at top right, #1e293b 0%, var(--bg-color) 70%);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        /* Top Navbar */
+        .navbar-custom {
+            border-bottom: 1px solid var(--border-color);
+            background-color: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-links-container {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-link-custom {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 500;
+            padding: 8px 4px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-link-custom:hover {
+            color: var(--accent-red-hover);
+        }
+
+        .nav-link-custom.active {
+            color: var(--accent-red-hover) !important;
+            border-bottom: 2px solid var(--accent-red);
+            font-weight: 600;
+        }
+
+
+
+        /* Cards  */
+        .analytics-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        .analytics-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        /* KPI  */
+        .kpi-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Table  */
+        .table-custom {
+            width: 100%;
+            margin-bottom: 0;
+            color: var(--text-primary);
+            border-collapse: collapse;
+        }
+
+        .table-custom th {
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 14px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .table-custom td {
+            padding: 16px;
+            border-bottom: 1px solid rgba(34, 45, 74, 0.5);
+            font-size: 15px;
+        }
+
+        .table-custom tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        .table-custom tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Karmaşıklık matrisi  */
+        .matrix-table {
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .matrix-table th {
+            background-color: rgba(255, 255, 255, 0.02);
+            font-size: 12px;
+            padding: 10px;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .matrix-table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            font-weight: 600;
+        }
+
+        /* Alert Warning Cards */
+        .alert-academic {
+            background-color: #3f3f0e;
+            border: 1px solid #6b6b13;
+            border-radius: 8px;
+            padding: 16px 20px;
+            color: #fef08a;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .alert-decision {
+            background-color: var(--alert-red-bg);
+            border: 1px solid var(--alert-red-border);
+            border-radius: 8px;
+            padding: 16px;
+            color: var(--alert-red-text);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Haplar ve Listeler */
+        .recommendation-item {
+            background-color: var(--accent-green-bg);
+            color: var(--accent-green-text);
+            border: 1px solid var(--accent-green-border);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Açılır liste arama çubuğu */
+        .search-container {
+            margin-bottom: 24px;
+        }
+
+        .search-select {
+            background-color: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 8px;
+            padding: 10px 16px;
+            width: 100%;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-select:focus {
+            border-color: var(--accent-red);
+        }
+
+        /* Özellik önemi */
+        .feature-bar-container {
+            margin-bottom: 16px;
+        }
+
+        .feature-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .feature-bar-bg {
+            background-color: rgba(255, 255, 255, 0.05);
+            height: 40px;
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+        }
+
+        .feature-bar-fill {
+            background-color: #60a5fa;
+            height: 100%;
+            transition: width 1s ease-in-out;
+        }
+
+        .segment-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-vip { background-color: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); }
+        .badge-regular { background-color: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
+        .badge-lowvalue { background-color: rgba(234, 179, 8, 0.2); color: #fef08a; border: 1px solid rgba(234, 179, 8, 0.4); }
+        .badge-lost { background-color: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4); }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="navbar-custom">
+    <div class="container-fluid px-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="nav-links-container">
+                <a class="nav-link-custom active" id="tab-dashboard" onclick="showTab('dashboard')">📈 Genel Yönetici Paneli</a>
+                <a class="nav-link-custom" id="tab-query" onclick="showTab('query')">🔍 Akıllı Müşteri Sorgulama</a>
+                <a class="nav-link-custom" id="tab-ml" onclick="showTab('ml')">⚙️ ML Performans & Güvence</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Container -->
+<div class="container-fluid px-4 mt-4">
+
+    <!-- TAB 1: Genel Yönetici Paneli -->
+    <div id="pane-dashboard">
+        <!-- Top KPI Kartları -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="analytics-card">
+                    <div class="kpi-title">Toplam Satış Hacmi</div>
+                    <div class="kpi-value" id="kpi-sales">Loading...</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="analytics-card">
+                    <div class="kpi-title">Kayıtlı Müşteri</div>
+                    <div class="kpi-value" id="kpi-customers">Loading...</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="analytics-card">
+                    <div class="kpi-title">VIP Segment Gücü</div>
+                    <div class="kpi-value" id="kpi-vip">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grafikler ve Bölüm Özeti -->
+        <div class="row">
+            <div class="col-lg-6 col-12">
+                <div class="analytics-card" style="height: calc(100% - 24px);">
+                    <h5 class="mb-4">📈 Segment Dağılımları</h5>
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="segmentChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 col-12">
+                <div class="analytics-card" style="height: calc(100% - 24px);">
+                    <h5 class="mb-4">📊 Segment Bazlı RFM Ortalamaları</h5>
+                    <div class="table-responsive">
+                        <table class="table-custom">
+                            <thead>
+                                <tr>
+                                    <th>Segment</th>
+                                    <th>Recency (Ort.)</th>
+                                    <th>Frequency (Ort.)</th>
+                                    <th>Monetary (Ort.)</th>
+                                    <th>CLV (Ort.)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="segment-averages-tbody">
+                                <tr><td colspan="5" class="text-center py-4">Veriler yükleniyor...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top 10 CLV Tablosu -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="analytics-card">
+                    <h5 class="mb-4">🏆 En Yüksek Yaşam Boyu Değere (CLV) Sahip İlk 10 Müşteri</h5>
+                    <div class="table-responsive">
+                        <table class="table-custom">
+                            <thead>
+                                <tr>
+                                    <th>CustomerID</th>
+                                    <th>Segment</th>
+                                    <th>Recency</th>
+                                    <th>Frequency</th>
+                                    <th>Monetary</th>
+                                    <th>CLV</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-customers-tbody">
+                                <tr><td colspan="6" class="text-center py-4">Veriler yükleniyor...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: Akıllı Müşteri Sorgulama -->
+    <div id="pane-query" class="hidden">
+        <div class="analytics-card">
+            <h5 class="mb-4">👤 Çok Boyutlu Müşteri Detay Analizi ve Karar Motoru</h5>
+            <div class="search-container">
+                <label class="kpi-title d-block mb-2">Sorgulanacak Müşteri ID</label>
+                <select class="search-select" id="customer-select" onchange="loadCustomerDetail(this.value)">
+                    <option value="">Seçiniz...</option>
+                </select>
+            </div>
+
+            <!-- Müşteri KPI Metrics -->
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="analytics-card" style="background-color: rgba(255,255,255,0.02);">
+                        <div class="kpi-title">Müşteri Segmenti</div>
+                        <div class="kpi-value" id="cust-segment">-</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="analytics-card" style="background-color: rgba(255,255,255,0.02);">
+                        <div class="kpi-title">30 Gün İçinde Satın Alma Eğilimi</div>
+                        <div class="kpi-value" id="cust-purchase-prob">-%</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="analytics-card" style="background-color: rgba(255,255,255,0.02);">
+                        <div class="kpi-title">Sistem Terk Etme (Churn) Riski</div>
+                        <div class="kpi-value" id="cust-churn-risk">-%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Öneri & Karar Kolonları -->
+            <div class="row mt-4" id="customer-detail-sections">
+                <div class="col-lg-6 col-12">
+                    <div class="analytics-card" style="background-color: rgba(0,0,0,0.1); height: 100%;">
+                        <h6 class="mb-3" style="font-weight: 600; display: flex; align-items: center; gap: 8px;">🎯 Kişiselleştirilmiş Ürün Önerileri</h6>
+                        <p class="text-secondary mb-4" style="font-size: 13px;">Müşterinin segmentindeki benzer profillerin tercih ettiği ama bu müşterinin henüz almadığı ürünler (Segment-Based Recommendation):</p>
+                        <div id="recommendations-container">
+                            <!-- Öneriler buraya -->
+                            <div class="text-secondary fs-6 py-2">Lütfen sorgulamak için bir müşteri seçin.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-12">
+                    <div class="analytics-card" style="background-color: rgba(0,0,0,0.1); height: 100%;">
+                        <h6 class="mb-3" style="font-weight: 600; display: flex; align-items: center; gap: 8px;">🤖 Karar Destek Sistemi Önerisi</h6>
+                        <div id="decision-alert-container" class="mb-4">
+                            <div class="text-secondary fs-6 py-2">Müşteri seçildikten sonra otomatik eylem planı burada görüntülenecektir.</div>
+                        </div>
+
+                        <h6 class="mb-3" style="font-weight: 600;">Müşteri Finansal Metrikleri</h6>
+                        <ul style="padding-left: 20px; line-height: 2;" class="text-secondary" id="financial-metrics-list">
+                            <li>Toplam Harcama: -</li>
+                            <li>Toplam İşlem Sayısı: -</li>
+                            <li>Hesaplanan CLV Skoru: -</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: ML Performans & Güvence -->
+    <div id="pane-ml" class="hidden">
+        <div class="analytics-card">
+            <h5 class="mb-4">⚙️ Çift Model Performans ve Metrik Raporu</h5>
+
+            <div class="row">
+                <!-- Model 1: Satın Alma Tahmin Modeli -->
+                <div class="col-lg-6 col-12 mb-4">
+                    <div class="analytics-card" style="background-color: rgba(0,0,0,0.1); height: 100%;">
+                        <h5 class="mb-4" style="font-weight: 600; display: flex; align-items: center; gap: 10px;">🛒 Satın Alma Tahmin Modeli</h5>
+                        
+                        <div class="row mb-4">
+                            <div class="col-4">
+                                <div class="kpi-title">Model Doğruluğu</div>
+                                <div class="kpi-value text-primary fs-4" id="purchase-accuracy">Loading...</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="kpi-title">ROC-AUC Skoru</div>
+                                <div class="kpi-value text-primary fs-4" id="purchase-auc">Loading...</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="kpi-title">F1 Skoru</div>
+                                <div class="kpi-value text-primary fs-4" id="purchase-f1">Loading...</div>
+                            </div>
+                        </div>
+
+                        <h6 class="mb-3" style="font-weight: 600;">Özellik Önem Dereceleri (Feature Importance):</h6>
+                        <div id="purchase-feature-importance" class="mb-4">
+                            <!-- Dinamik olarak doldurulur -->
+                        </div>
+
+                        <h6 class="mb-3" style="font-weight: 600;">Karmaşıklık Matrisi (Confusion Matrix):</h6>
+                        <table class="matrix-table text-primary">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Tahmin: Almaz (0)</th>
+                                    <th>Tahmin: Alır (1)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th style="font-weight: 500;">Gerçek: Almaz (0)</th>
+                                    <td id="m1-tn">-</td>
+                                    <td id="m1-fp">-</td>
+                                </tr>
+                                <tr>
+                                    <th style="font-weight: 500;">Gerçek: Alır (1)</th>
+                                    <td id="m1-fn">-</td>
+                                    <td id="m1-tp">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Model 2: Churn Modeli -->
+                <div class="col-lg-6 col-12 mb-4">
+                    <div class="analytics-card" style="background-color: rgba(0,0,0,0.1); height: 100%;">
+                        <h5 class="mb-4" style="font-weight: 600; display: flex; align-items: center; gap: 10px;">📉 Churn (Müşteri Terk) Modeli</h5>
+                        
+                        <div class="row mb-4">
+                            <div class="col-4">
+                                <div class="kpi-title">Model Doğruluğu</div>
+                                <div class="kpi-value text-primary fs-4" id="churn-accuracy">Loading...</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="kpi-title">ROC-AUC Skoru</div>
+                                <div class="kpi-value text-primary fs-4" id="churn-auc">Loading...</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="kpi-title">F1 Skoru</div>
+                                <div class="kpi-value text-primary fs-4" id="churn-f1">Loading...</div>
+                            </div>
+                        </div>
+
+                        <h6 class="mb-3" style="font-weight: 600;">Özellik Önem Dereceleri (Feature Importance):</h6>
+                        <div id="churn-feature-importance" class="mb-4">
+                            <!-- Populated dynamically -->
+                        </div>
+
+                        <h6 class="mb-3" style="font-weight: 600;">Karmaşıklık Matrisi (Confusion Matrix):</h6>
+                        <table class="matrix-table text-primary">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Tahmin: Kalır (0)</th>
+                                    <th>Tahmin: Churn (1)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th style="font-weight: 500;">Gerçek: Kalır (0)</th>
+                                    <td id="m2-tn">-</td>
+                                    <td id="m2-fp">-</td>
+                                </tr>
+                                <tr>
+                                    <th style="font-weight: 500;">Gerçek: Churn (1)</th>
+                                    <td id="m2-fn">-</td>
+                                    <td id="m2-tp">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sistem Sorumluluk Reddi / Model Varsayım Notu -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="alert-academic">
+                        ℹ️ <strong>Model Veri Yapısı ve Varsayımlar:</strong> Orijinal veri setinde doğrudan bir 'Churn' etiketi yer almamaktadır. Projede, e-ticaret literatüründeki genel kabullere dayanarak; son 90 gün boyunca sistemde fatura kaydı bulunmayan müşteriler 'Churn' (Kayıp Müşteri) olarak etiketlenmiş ve Random Forest modeli bu iş hedefi doğrultusunda eğitilmiştir.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- İstemci tarafı mantığı -->
+<script>
+    let segmentChartInstance = null;
+
+    // Para birimlerini biçimlendirmesi
+    function formatCurrency(val) {
+        return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val) + " TL";
+    }
+
+    // Numaraların biçimlendirilmesi
+    function formatNumber(val) {
+        return new Intl.NumberFormat('tr-TR').format(val);
+    }
+
+    // Seçili Tab
+    function showTab(tab) {
+        // Update nav active classes
+        document.querySelectorAll('.nav-link-custom').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+
+        // Toggle visibility
+        document.getElementById('pane-dashboard').classList.add('hidden');
+        document.getElementById('pane-query').classList.add('hidden');
+        document.getElementById('pane-ml').classList.add('hidden');
+        document.getElementById('pane-' + tab).classList.remove('hidden');
+
+        // Gerekirse güncelleme triggerı
+        if (tab === 'dashboard') {
+            loadDashboard();
+        } else if (tab === 'ml') {
+            loadMLMetrics();
+        }
+    }
+
+    // Gösterge Paneli Sekme Veriler Yükle
+    function loadDashboard() {
+        fetch('/api/dashboard')
+            .then(res => res.json())
+            .then(data => {
+                // KPIlar
+                document.getElementById('kpi-sales').innerText = formatCurrency(data.total_revenue);
+                document.getElementById('kpi-customers').innerText = formatNumber(data.customer_count);
+                document.getElementById('kpi-vip').innerText = formatNumber(data.vip_count);
+
+                // Segment Ortalamaları Tablosu
+                const avgTbody = document.getElementById('segment-averages-tbody');
+                avgTbody.innerHTML = '';
+                
+                // Segment ortalamalarını mantıksal bir sırayla görüntülenecek şekilde sırala (Lost, Low Value, Regular, VIP)
+                const segOrder = ["Lost", "Low Value", "Regular", "VIP"];
+                const sortedAverages = [...data.segment_averages].sort((a, b) => {
+                    return segOrder.indexOf(a.Segment) - segOrder.indexOf(b.Segment);
+                });
+
+                sortedAverages.forEach(row => {
+                    avgTbody.innerHTML += `
+                        <tr>
+                            <td><span class="segment-badge badge-${row.Segment.toLowerCase().replace(' ', '')}">${row.Segment}</span></td>
+                            <td>${row.Recency} gün</td>
+                            <td>${row.Frequency}</td>
+                            <td>${formatCurrency(row.Monetary)}</td>
+                            <td>${formatNumber(row.CLV)} Skoru</td>
+                        </tr>
+                    `;
+                });
+
+                // Top 10 Müşteri Tablosu
+                const topTbody = document.getElementById('top-customers-tbody');
+                topTbody.innerHTML = '';
+                data.top_customers.forEach(row => {
+                    topTbody.innerHTML += `
+                        <tr>
+                            <td><strong>${row.CustomerID}</strong></td>
+                            <td><span class="segment-badge badge-${row.Segment.toLowerCase().replace(' ', '')}">${row.Segment}</span></td>
+                            <td>${row.Recency} gün</td>
+                            <td>${row.Frequency}</td>
+                            <td>${formatCurrency(row.Monetary)}</td>
+                            <td>${formatNumber(row.CLV)} Skoru</td>
+                        </tr>
+                    `;
+                });
+
+                // Chart.js sütun grafiğini (Bar Chart) oluştur
+                renderSegmentChart(data.segment_counts);
+            })
+            .catch(err => console.error("Error loading dashboard:", err));
+    }
+
+    // Chart.js kullanarak segment grafiğini çiz
+        const ctx = document.getElementById('segmentChart').getContext('2d');
+        
+        // Çakışmaları engellemek adına eski grafik nesnesini destroy et
+        if (segmentChartInstance) {
+            segmentChartInstance.destroy();
+        }
+
+        const labels = ["Lost", "Low Value", "Regular", "VIP"];
+        const dataValues = labels.map(lbl => counts[lbl] || 0);
+
+        segmentChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Müşteri Sayısı',
+                    data: dataValues,
+                    backgroundColor: '#60a5fa',
+                    borderColor: '#3b82f6',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    barThickness: 45
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: '#222d4a'
+                        },
+                        ticks: {
+                            color: '#94a3b8',
+                            font: {
+                                family: 'Outfit'
+                            }
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: '#222d4a'
+                        },
+                        ticks: {
+                            color: '#94a3b8',
+                            font: {
+                                family: 'Outfit'
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Açılır menüyü tüm müşteri ID'leri ile doldur
+    function loadCustomerList() {
+        fetch('/api/customer_list')
+            .then(res => res.json())
+            .then(data => {
+                const select = document.getElementById('customer-select');
+                if (!select || !data || !data.customer_ids) return;
+                
+                let html = '<option value="">Seçiniz...</option>';
+                data.customer_ids.sort((a,b) => a - b).forEach(cid => {
+                    html += `<option value="${cid}">${cid}.0</option>`;
+                });
+                select.innerHTML = html;
+
+                // Listede varsa 12418.0 ID'li müşteri için varsayılan seçimi tetikle
+                if (data.customer_ids.includes(12418)) {
+                    select.value = 12418;
+                    loadCustomerDetail(12418);
+                } else if (data.customer_ids.length > 0) {
+                    select.value = data.customer_ids[0];
+                    loadCustomerDetail(data.customer_ids[0]);
+                }
+            })
+            .catch(err => console.error("Error loading customer list:", err));
+    }
+
+    // Bireysel Müşteri Verilerini Al
+    function loadCustomerDetail(cid) {
+        if (!cid) {
+            // Müşteri detay alanlarını placeholder konumuna sıfırla
+            document.getElementById('cust-segment').innerText = '-';
+            document.getElementById('cust-purchase-prob').innerText = '-%';
+            document.getElementById('cust-churn-risk').innerText = '-%';
+            document.getElementById('recommendations-container').innerHTML = '<div class="text-secondary fs-6 py-2">Lütfen sorgulamak için bir müşteri seçin.</div>';
+            document.getElementById('decision-alert-container').innerHTML = '<div class="text-secondary fs-6 py-2">Müşteri seçildikten sonra otomatik eylem planı burada görüntülenecektir.</div>';
+            document.getElementById('financial-metrics-list').innerHTML = `
+                <li>Toplam Harcama: -</li>
+                <li>Toplam İşlem Sayısı: -</li>
+                <li>Hesaplanan CLV Skoru: -</li>
+            `;
+            return;
+        }
+
+        fetch('/api/customer/' + cid)
+            .then(res => res.json())
+            .then(data => {
+                //  KPIlar
+                const segBadge = `<span class="segment-badge badge-${data.segment.toLowerCase().replace(' ', '')}">${data.segment}</span>`;
+                document.getElementById('cust-segment').innerHTML = data.segment;
+                document.getElementById('cust-purchase-prob').innerText = `%${data.purchase_probability.toFixed(1)}`;
+                document.getElementById('cust-churn-risk').innerText = `%${data.churn_risk.toFixed(1)}`;
+
+                // Öneri Listesi
+                const recContainer = document.getElementById('recommendations-container');
+                recContainer.innerHTML = '';
+                data.recommendations.forEach((rec, idx) => {
+                    recContainer.innerHTML += `
+                        <div class="recommendation-item">
+                            <span>${idx + 1}. ${rec}</span>
+                        </div>
+                    `;
+                });
+
+                // Uyarı planı
+                const alertContainer = document.getElementById('decision-alert-container');
+                alertContainer.innerHTML = `
+                    <div class="alert-decision">
+                        ${data.decision_support}
+                    </div>
+                `;
+
+                // Finansal metrikler
+                document.getElementById('financial-metrics-list').innerHTML = `
+                    <li>Toplam Harcama: <strong>${formatCurrency(data.monetary)}</strong></li>
+                    <li>Toplam İşlem Sayısı: <strong>${data.frequency}</strong></li>
+                    <li>Hesaplanan CLV Skoru: <strong>${formatNumber(data.clv)}</strong></li>
+                `;
+            })
+            .catch(err => console.error("Error loading customer detail:", err));
+    }
+
+    // ML modeli performans metrikleri ekranı
+    function loadMLMetrics() {
+        fetch('/api/ml_metrics')
+            .then(res => res.json())
+            .then(data => {
+                // Satın Alma Modeli
+                document.getElementById('purchase-accuracy').innerText = `%${data.purchase.accuracy.toFixed(2)}`;
+                document.getElementById('purchase-auc').innerText = data.purchase.roc_auc.toFixed(3);
+                document.getElementById('purchase-f1').innerText = `%${data.purchase.f1_score.toFixed(2)}`;
+                
+                // Satın alam Önem Dereceleri
+                const pFeatureContainer = document.getElementById('purchase-feature-importance');
+                pFeatureContainer.innerHTML = '';
+                
+                // Faktörleri önem sırasına göre sırala
+                const pSortedFeatures = [...data.purchase.feature_importances].sort((a,b) => b.importance - a.importance);
+                pSortedFeatures.forEach(feat => {
+                    pFeatureContainer.innerHTML += `
+                        <div class="feature-bar-container">
+                            <div class="feature-label">
+                                <span>${feat.feature}</span>
+                                <span>%${(feat.importance * 100).toFixed(0)}</span>
+                            </div>
+                            <div class="feature-bar-bg">
+                                <div class="feature-bar-fill" style="width: ${feat.importance * 100}%"></div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Satın Alma Karmaşıklık Matriksi
+                document.getElementById('m1-tn').innerText = data.purchase.confusion_matrix.tn;
+                document.getElementById('m1-fp').innerText = data.purchase.confusion_matrix.fp;
+                document.getElementById('m1-fn').innerText = data.purchase.confusion_matrix.fn;
+                document.getElementById('m1-tp').innerText = data.purchase.confusion_matrix.tp;
+
+                // Churn Modeli
+                document.getElementById('churn-accuracy').innerText = `%${data.churn.accuracy.toFixed(2)}`;
+                document.getElementById('churn-auc').innerText = data.churn.roc_auc.toFixed(3);
+                document.getElementById('churn-f1').innerText = `%${data.churn.f1_score.toFixed(2)}`;
+
+                // Churn Önem Dereceleri
+                const cFeatureContainer = document.getElementById('churn-feature-importance');
+                cFeatureContainer.innerHTML = '';
+                const cSortedFeatures = [...data.churn.feature_importances].sort((a,b) => b.importance - a.importance);
+                cSortedFeatures.forEach(feat => {
+                    cFeatureContainer.innerHTML += `
+                        <div class="feature-bar-container">
+                            <div class="feature-label">
+                                <span>${feat.feature}</span>
+                                <span>%${(feat.importance * 100).toFixed(0)}</span>
+                            </div>
+                            <div class="feature-bar-bg">
+                                <div class="feature-bar-fill" style="width: ${feat.importance * 100}%"></div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Churn Karmaşıklık Matriksi
+                document.getElementById('m2-tn').innerText = data.churn.confusion_matrix.tn;
+                document.getElementById('m2-fp').innerText = data.churn.confusion_matrix.fp;
+                document.getElementById('m2-fn').innerText = data.churn.confusion_matrix.fn;
+                document.getElementById('m2-tp').innerText = data.churn.confusion_matrix.tp;
+            })
+            .catch(err => console.error("Error loading ML metrics:", err));
+    }
+
+    // Başlangıç işlevi
+    window.onload = () => {
+        loadDashboard();
+        loadCustomerList();
+    };
+</script>
+</body>
+</html>
