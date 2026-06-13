@@ -4,8 +4,10 @@ import kagglehub
 import datetime as dt
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, roc_auc_score, f1_score
 
-# 1. VERIYI YUKLEME VE TEMIZLEME KISMI
 def load_and_clean_data():
     local_file = "online_retail.csv"
     if os.path.exists(local_file):
@@ -34,11 +36,15 @@ def load_and_clean_data():
     df["TotalPrice"] = df["Quantity"] * df["UnitPrice"]
     return df
 
-print("ETL ve K-Means Segmentasyon Sistemi Baslatiliyor...")
 df = load_and_clean_data()
 max_date = df["InvoiceDate"].max()
+
 cutoff_purchase = max_date - dt.timedelta(days=30)
 df_features_purchase = df[df["InvoiceDate"] <= cutoff_purchase]
+active_in_target_purchase = df[df["InvoiceDate"] > cutoff_purchase]["CustomerID"].unique()
+
+cutoff_churn = max_date - dt.timedelta(days=90)
+active_in_target_churn = df[df["InvoiceDate"] > cutoff_churn]["CustomerID"].unique()
 
 rfm = df_features_purchase.groupby("CustomerID").agg({
     "InvoiceDate": lambda x: (cutoff_purchase - x.max()).days,
@@ -47,9 +53,36 @@ rfm = df_features_purchase.groupby("CustomerID").agg({
 })
 rfm.columns = ["Recency", "Frequency", "Monetary"]
 
+rfm["CLV"] = rfm["Monetary"] * rfm["Frequency"]
+rfm["Avg_Order_Value"] = rfm["Monetary"] / rfm["Frequency"]
+
+customer_age = df_features_purchase.groupby("CustomerID")["InvoiceDate"].agg(
+    lambda x: (cutoff_purchase - x.min()).days
+)
+rfm["Customer_Age"] = customer_age
+
+product_variety = df_features_purchase.groupby("CustomerID")["Description"].nunique()
+rfm["Product_Variety"] = product_variety
+
+rfm['Likely_to_Buy'] = rfm.index.isin(active_in_target_purchase).astype(int)
+rfm['Is_Churn'] = (~rfm.index.isin(active_in_target_churn)).astype(int)
+
+X = rfm[["Recency", "Frequency", "Monetary", "CLV", "Avg_Order_Value", "Customer_Age", "Product_Variety"]]
 scaler = StandardScaler()
-X_scaled = scaler.fit_transform(rfm)
+X_scaled = scaler.fit_transform(X)
 
 kmeans = KMeans(n_clusters=4, random_state=42, n_init=10)
 rfm["Cluster"] = kmeans.fit_predict(X_scaled)
-print("K-Means Kumeleme tamamlandi.")
+
+# ML Training
+y_buy = rfm['Likely_to_Buy']
+y_churn = rfm['Is_Churn']
+
+X_train_b, X_test_b, y_train_b, y_test_b = train_test_split(X, y_buy, test_size=0.2, random_state=42, stratify=y_buy)
+buy_model = RandomForestClassifier(n_estimators=300, max_depth=12, min_samples_split=10, min_samples_leaf=5, class_weight="balanced", random_state=42, n_jobs=-1)
+buy_model.fit(X_train_b, y_train_b)
+
+X_train_c, X_test_c, y_train_c, y_test_c = train_test_split(X, y_churn, test_size=0.2, random_state=42, stratify=y_churn)
+churn_model = RandomForestClassifier(n_estimators=300, max_depth=12, min_samples_split=10, min_samples_leaf=5, class_weight="balanced", random_state=42, n_jobs=-1)
+churn_model.fit(X_train_c, y_train_c)
+print("Modeller egitildi.")
